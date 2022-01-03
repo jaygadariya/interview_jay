@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'dart:math' as math;
 
+import 'package:interview_jay/view/second_task.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -14,7 +16,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -67,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     sqrt.value = 0;
                     totalCount.value = 0;
                     _textEditingController.value.clear();
-                    Navigator.pop(context);
+                    Get.back();
                   },
                   child: const Text("OK"),
                 )
@@ -118,6 +120,9 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: const Text("Demo App"),
       ),
+      floatingActionButton: FloatingActionButton(onPressed: (){
+        Get.to(()=>SecondTask());
+      },),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8.0),
         child: Obx(() => Column(

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'dart:math' as math;
 
 void main() {
   runApp(const MyApp());
@@ -33,22 +36,62 @@ class _MyHomePageState extends State<MyHomePage> {
       TextEditingController().obs;
 
   Rx<int> totalCount = 0.obs;
+  Rx<int> sqrt = 0.obs;
+  Timer? t;
+
+  Rx<int> generatedNumber = 0.obs;
+  RxList clickedTile = [].obs;
+
+  isPerfectSqrt(int num) {
+    sqrt.value = math.sqrt(num).toInt();
+    if ((sqrt.value * sqrt.value) == num) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  generateRandomNumber() {
+    if (clickedTile.length == int.parse(_textEditingController.value.text)) {
+      print("game over");
+      t?.cancel();
+    } else {
+      nextNum();
+      t = Timer.periodic(Duration(seconds: 10), (timer) {
+        nextNum();
+        print(generatedNumber.value);
+      });
+    }
+  }
+
+  nextNum() {
+    int temp =
+        math.Random().nextInt(int.parse(_textEditingController.value.text));
+    if (clickedTile.contains(temp)) {
+      nextNum();
+    } else {
+      generatedNumber.value = temp;
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _textEditingController.value.addListener(() {
-      if (_textEditingController.value.text.trim().isNotEmpty) {
-        if (!(int.parse(_textEditingController.value.text) % 2 == 0)) {
-          _textEditingController.value.clear();
+      Future.delayed(Duration(seconds: 1), () {
+        if (_textEditingController.value.text.trim().isNotEmpty) {
+          if (!isPerfectSqrt(int.parse(_textEditingController.value.text))) {
+            _textEditingController.value.clear();
+          }
         }
-      }
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white.withOpacity(.8),
       appBar: AppBar(
         title: const Text("Demo App"),
       ),
@@ -65,13 +108,15 @@ class _MyHomePageState extends State<MyHomePage> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly
                         ],
-                        onChanged: (value) {},
                       ),
                     ),
                     MaterialButton(
                       onPressed: () {
-                        totalCount.value =
-                            int.parse(_textEditingController.value.text);
+                        if (isPerfectSqrt(
+                            int.parse(_textEditingController.value.text))) {
+                          totalCount.value = sqrt.value;
+                          generateRandomNumber();
+                        }
                       },
                       child: const Text("Submit"),
                     )
@@ -81,14 +126,34 @@ class _MyHomePageState extends State<MyHomePage> {
                     ? Container()
                     : Expanded(
                         child: GridView.count(
-                          crossAxisCount: totalCount ~/ 2,
+                          crossAxisCount: totalCount.value,
                           children: List.generate(
-                            totalCount.value,
-                            (index) => Container(
-                              margin: const EdgeInsets.all(8.0),
-                              height: 70,
-                              width: 70,
-                              color: Colors.red,
+                            int.parse(_textEditingController.value.text),
+                            (index) => GestureDetector(
+                              onTap: () {
+                                if (generatedNumber.value == index) {
+                                  t?.cancel();
+                                  generateRandomNumber();
+                                  clickedTile.add(index);
+                                }
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.all(8.0),
+                                height: 70,
+                                width: 70,
+                                decoration: BoxDecoration(
+                                  color: clickedTile.contains(index)
+                                      ? Colors.blueGrey
+                                      : generatedNumber.value == index
+                                          ? Colors.red
+                                          : Colors.white,
+                                  border: Border.all(
+                                    color: Colors.blueGrey,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Text("$index"),
+                              ),
                             ),
                           ),
                         ),

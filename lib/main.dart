@@ -53,13 +53,32 @@ class _MyHomePageState extends State<MyHomePage> {
 
   generateRandomNumber() {
     if (clickedTile.length == int.parse(_textEditingController.value.text)) {
-      print("game over");
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              content: const Text("Game Over"),
+              actions: [
+                MaterialButton(
+                  onPressed: () {
+                    t?.cancel();
+                    clickedTile.clear();
+                    generatedNumber.value = 0;
+                    sqrt.value = 0;
+                    totalCount.value = 0;
+                    _textEditingController.value.clear();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("OK"),
+                )
+              ],
+            );
+          });
       t?.cancel();
     } else {
       nextNum();
-      t = Timer.periodic(Duration(seconds: 10), (timer) {
+      t = Timer.periodic(const Duration(seconds: 10), (timer) {
         nextNum();
-        print(generatedNumber.value);
       });
     }
   }
@@ -67,8 +86,12 @@ class _MyHomePageState extends State<MyHomePage> {
   nextNum() {
     int temp =
         math.Random().nextInt(int.parse(_textEditingController.value.text));
-    if (clickedTile.contains(temp)) {
-      nextNum();
+    if (temp == generatedNumber.value || clickedTile.contains(temp)) {
+      if (clickedTile.length == int.parse(_textEditingController.value.text)) {
+        t?.cancel();
+      } else {
+        generateRandomNumber();
+      }
     } else {
       generatedNumber.value = temp;
     }
@@ -78,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _textEditingController.value.addListener(() {
-      Future.delayed(Duration(seconds: 1), () {
+      Future.delayed(const Duration(seconds: 1), () {
         if (_textEditingController.value.text.trim().isNotEmpty) {
           if (!isPerfectSqrt(int.parse(_textEditingController.value.text))) {
             _textEditingController.value.clear();
@@ -112,6 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                     MaterialButton(
                       onPressed: () {
+                        clickedTile.clear();
                         if (isPerfectSqrt(
                             int.parse(_textEditingController.value.text))) {
                           totalCount.value = sqrt.value;
@@ -132,18 +156,17 @@ class _MyHomePageState extends State<MyHomePage> {
                             (index) => GestureDetector(
                               onTap: () {
                                 if (generatedNumber.value == index) {
+                                  clickedTile.add(index);
                                   t?.cancel();
                                   generateRandomNumber();
-                                  clickedTile.add(index);
                                 }
                               },
                               child: Container(
                                 margin: const EdgeInsets.all(8.0),
-                                height: 70,
-                                width: 70,
+
                                 decoration: BoxDecoration(
                                   color: clickedTile.contains(index)
-                                      ? Colors.blueGrey
+                                      ? Colors.blue
                                       : generatedNumber.value == index
                                           ? Colors.red
                                           : Colors.white,
@@ -152,7 +175,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                     width: 1,
                                   ),
                                 ),
-                                child: Text("$index"),
                               ),
                             ),
                           ),
